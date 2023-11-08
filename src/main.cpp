@@ -1,7 +1,10 @@
-// raytracing
-#include "vec.h"
 #include <iostream>
 #include <vector>
+#include "vec.h"
+#include "object.h"
+#include "utils.h"
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
 
@@ -27,8 +30,7 @@ int main(int argc, char *argv[]) {
     vector<vec3> vertices;
 
     // parse file
-    parse_content(contents, objects, lights, bulbs, img, cur_color, tracer,
-                  vertices);
+    parse_content(contents, objects, lights, bulbs, img, cur_color, tracer, vertices);
 
     // for each pixel
     int max_wh = max(img.w, img.h);
