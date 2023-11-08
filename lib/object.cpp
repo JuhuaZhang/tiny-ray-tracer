@@ -102,83 +102,34 @@ vec3 lgt::get_light_dir(vec3 p){
     return this->direction;
 }
 
+// todo: find the bug
+vec3 lgt::compute_diffuse_color(vec3 p, vec3 n, vec4 color){
+    vec3 light_dir = this->get_light_dir(p);
+    vec3 diffuse_color = vec3(
+        (color.x * this->color.x),
+        (color.y * this->color.y),
+        (color.z * this->color.z));
+    diffuse_color = max(dot(n, light_dir), 0.0f) * diffuse_color;
+
+    return diffuse_color;
+}
+
 vec3 bulb::get_light_dir(vec3 p){
     return normalize(this->location - p);
 }
 
-// used after computing the intersection
-vec4 linear_to_srgb(vec4 color) {
-    vec4 srgb_color = color;
-    srgb_color.x = (srgb_color.x <= 0.0031308f)
-                   ? (12.92f * srgb_color.x)
-                   : (1.055f * pow(srgb_color.x, 1.0f / 2.4f) - 0.055f);
-    srgb_color.y = (srgb_color.y <= 0.0031308f)
-                   ? (12.92f * srgb_color.y)
-                   : (1.055f * pow(srgb_color.y, 1.0f / 2.4f) - 0.055f);
-    srgb_color.z = (srgb_color.z <= 0.0031308f)
-                   ? (12.92f * srgb_color.z)
-                   : (1.055f * pow(srgb_color.z, 1.0f / 2.4f) - 0.055f);
-    return srgb_color;
-}
+vec3 bulb::compute_diffuse_color(vec3 p, vec3 n, vec4 color){
+    vec3 light_dir = this->get_light_dir(p);
+    vec3 diffuse_color = vec3(
+        (color.x * this->color.x),
+        (color.y * this->color.y),
+        (color.z * this->color.z));
+    diffuse_color = max(dot(n, light_dir), 0.0f) * diffuse_color;
+    vec3 dis = this->location - p;
+    float d = sqrt(dis.x * dis.x + dis.y * dis.y + dis.z * dis.z);
+    diffuse_color = (1.0f / (d * d)) * diffuse_color;
 
-// used when reading the file
-vec4 srgb_to_linear(vec4 color) {
-    // for each channel, if value < 0, convert to 0, if value > 1, convert to 1
-    color.x = (color.x < 0) ? 0 : color.x;
-    color.x = (color.x > 1) ? 1 : color.x;
-    color.y = (color.y < 0) ? 0 : color.y;
-    color.y = (color.y > 1) ? 1 : color.y;
-    color.z = (color.z < 0) ? 0 : color.z;
-    color.z = (color.z > 1) ? 1 : color.z;
-
-    // apply srgb to linear conversion
-    color.x = (color.x <= 0.04045f) ? (color.x / 12.92f)
-                                    : pow((color.x + 0.055f) / 1.055f, 2.4f);
-    color.y = (color.y <= 0.04045f) ? (color.y / 12.92f)
-                                    : pow((color.y + 0.055f) / 1.055f, 2.4f);
-    color.z = (color.z <= 0.04045f) ? (color.z / 12.92f)
-                                    : pow((color.z + 0.055f) / 1.055f, 2.4f);
-
-    // convert (0-1) to (0-255)
-    color.x = color.x * 255.0f; // + 0.5f;
-    color.y = color.y * 255.0f; // + 0.5f;
-    color.z = color.z * 255.0f; // + 0.5f;
-
-    return color;
-}
-
-vec4 color_mapping(vec4 color) {
-    // convert (0-1) to (0-255)
-    color.x = color.x * 255.0f; // + 0.5f;
-    color.y = color.y * 255.0f; // + 0.5f;
-    color.z = color.z * 255.0f; // + 0.5f;
-
-    return color;
-}
-
-vec3 clamp(vec3 color) {
-    color.x = (color.x < 0) ? 0 : color.x;
-    color.x = (color.x > 1) ? 1 : color.x;
-    color.y = (color.y < 0) ? 0 : color.y;
-    color.y = (color.y > 1) ? 1 : color.y;
-    color.z = (color.z < 0) ? 0 : color.z;
-    color.z = (color.z > 1) ? 1 : color.z;
-
-    return color;
-}
-
-float clamp(float v) {
-    v = (v < 0) ? 0 : v;
-    v = (v > 1) ? 1 : v;
-    return v;
-}
-
-vec3 expose(vec3 color, float exposure) {
-    color.x = 1 - exp(-color.x * exposure);
-    color.y = 1 - exp(-color.y * exposure);
-    color.z = 1 - exp(-color.z * exposure);
-
-    return color;
+    return diffuse_color;
 }
 
 bool check_occlusion(vec3 p, obj* self_object, vector<obj *> &objects, light * lght){

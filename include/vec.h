@@ -46,4 +46,14 @@ vec4 normalize(const vec4 &v);
 
 vec3 to_vec3(const vec4 &v);
 
+vec4 linear_to_srgb(vec4 color);
+
+vec4 srgb_to_linear(vec4 color);
+
+vec4 color_mapping(vec4 color);
+
+vec3 clamp(vec3 color);
+
+vec3 expose(vec3 color, float exposure);
+
 #endif // VEC_H

@@ -114,6 +114,8 @@ public:
 
     virtual vec3 get_light_dir(vec3 p) = 0;
 
+    virtual vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) = 0;
+
     virtual ~light() = default;
 };
 
@@ -126,6 +128,8 @@ public:
     lgt(vec3 location, vec4 color) :light(color), direction(location) {}
 
     vec3 get_light_dir(vec3 p) override;
+
+    vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) override;
 };
 
 class bulb : public light{
@@ -137,6 +141,8 @@ public:
     bulb(vec3 location, vec4 color) : light(color), location(location) {}
 
     vec3 get_light_dir(vec3 p) override;
+
+    vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) override;
 };
 
 class ray_tracer {
