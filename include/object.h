@@ -2,6 +2,7 @@
 #define OBJECT_H
 
 #include <iostream>
+#include <vector>
 #include "vec.h"
 
 // pixel to generate image
@@ -95,27 +96,39 @@ public:
     float intersection(vec3 c, vec3 ray) override;
 };
 
-class lgt {
+class light{
 public:
-    vec3 direction;
     vec4 color;
 
-    lgt() : direction(vec3()), color(vec4()) {}
+    light(): color(vec4()) {}
 
-    lgt(vec3 location, vec4 color) : direction(location), color(color) {}
+    light(vec4 color): color(color) {}
 
-    // todo
-    // virtual vec3 compute() = 0;
+    virtual vec3 get_light_dir(vec3 p) = 0;
+
+    virtual ~light() = default;
 };
 
-class bulb {
+class lgt : public light{
+public:
+    vec3 direction;
+
+    lgt() : light(), direction(vec3()) {}
+
+    lgt(vec3 location, vec4 color) :light(color), direction(location) {}
+
+    vec3 get_light_dir(vec3 p) override;
+};
+
+class bulb : public light{
 public:
     vec3 location;
-    vec4 color;
 
-    bulb() : location(vec3()), color(vec4()) {}
+    bulb() :light(), location(vec3()){}
 
-    bulb(vec3 location, vec4 color) : location(location), color(color) {}
+    bulb(vec3 location, vec4 color) : light(color), location(location) {}
+
+    vec3 get_light_dir(vec3 p) override;
 };
 
 class ray_tracer {

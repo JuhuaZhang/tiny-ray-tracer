@@ -2,6 +2,7 @@
 #include <utility>
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 #include "object.h"
 
@@ -85,6 +86,14 @@ float triangle::intersection(vec3 r0, vec3 ray){
     return t > 0 ? t : -1;
 }
 
+vec3 lgt::get_light_dir(vec3 p){
+    return this->direction;
+}
+
+vec3 bulb::get_light_dir(vec3 p){
+    return normalize(this->location - p);
+}
+
 // used after computing the intersection
 vec4 linear_to_srgb(vec4 color) {
     vec4 srgb_color = color;
@@ -160,21 +169,31 @@ vec3 expose(vec3 color, float exposure) {
     return color;
 }
 
+bool check_occlusion(vec3 p, obj* self_object, vector<obj *> &objects, light * lght){
+    for(auto *object: objects){
+        if(object != self_object){
+            if (object->intersection(p, lght->get_light_dir(p)) != -1)
+                return true;
+        }
+    }
+    return false;
+}
+
 vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
                    vector<lgt *> &lights, vector<bulb *> &bulbs,
                    vector<obj *> &objects, image &img, int depth) {
     vec3 p = r0 + n_t * normalize(ray);
 
     // check if the camera is inside the sphere, camera location is r0
-    float is_inside = 1.0f; // not inside
+    // float is_inside = 1.0f; // not inside
 
     vector<vec3> colors;
     vec3 n;
 
     if (auto *s = dynamic_cast<sphere *>(object)) {
         // check inside
-        if (len(r0 - s->location) < s->radius)
-            is_inside = -1.0f;
+        // if (len(r0 - s->location) < s->radius)
+            // is_inside = -1.0f;
 
         n = normalize(p - s->location);
     }
@@ -189,16 +208,7 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
     else return {0, 0, 0, 1};
     // check if the point is in shadow
     for (auto light: lights) {
-        bool in_shadow = false;
-        for (auto *o: objects) {
-            if (o != object) {
-                if (o->intersection(p, light->direction) != -1) {
-                    in_shadow = true;
-                    break;
-                }
-            }
-        }
-        if (!in_shadow) {
+        if (!check_occlusion(p, object, objects, light)) {
             vec3 x = normalize(light->direction); // incoming light direction
             vec3 cur_color = vec3((object->color.x * light->color.x),
                                   (object->color.y * light->color.y),
@@ -210,10 +220,10 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
 
     for (auto bulb: bulbs) {
         bool in_shadow = false;
-        vec3 x = is_inside * normalize(bulb->location - p);
+        vec3 x = normalize(bulb->location - p);
         for (auto *o: objects) {
             if (o != object) {
-                if (o->intersection(p, x) != -1 && is_inside == -1.0f) {
+                if (o->intersection(p, x) != -1) {
                     in_shadow = true;
                     break;
                 }
