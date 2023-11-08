@@ -60,6 +60,8 @@ public:
 
     virtual float intersection(vec3 c, vec3 ray) = 0;
 
+    virtual vec3 compute_normal(vec3 p) = 0;
+
     virtual ~obj() = default;
 };
 
@@ -72,6 +74,8 @@ public:
     sphere(vec3 location, vec4 color, float radius) : obj(location, color), radius(radius) {}
 
     float intersection(vec3 c, vec3 ray) override;
+
+    vec3 compute_normal(vec3 p) override;
 };
 
 class plane : public obj {
@@ -83,6 +87,8 @@ public:
     plane(vec4 params, vec4 color) : obj(vec3(), color), params(params) {}
 
     float intersection(vec3 c, vec3 ray) override;
+
+    vec3 compute_normal(vec3 p) override;
 };
 
 class triangle : public obj {
@@ -94,6 +100,8 @@ public:
     triangle(vec3 v1, vec3 v2, vec3 v3, vec4 color) : obj(vec3(), color), v1(v1), v2(v2), v3(v3) {}
 
     float intersection(vec3 c, vec3 ray) override;
+
+    vec3 compute_normal(vec3 p) override;
 };
 
 class light{

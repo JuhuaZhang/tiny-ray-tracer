@@ -43,6 +43,10 @@ float sphere::intersection(vec3 r0, vec3 ray){
         return inside ? tc+t_offset : tc-t_offset;
 }
 
+vec3 sphere::compute_normal(vec3 p){
+    return normalize(p - this->location);
+}
+
 float plane::intersection(vec3 r0, vec3 ray){
     
     vec3 n = normalize(vec3(this->params.x, this->params.y, this->params.z));
@@ -59,6 +63,10 @@ float plane::intersection(vec3 r0, vec3 ray){
     float t = dot((p - r0), n) / dot(rd, n);
 
     return t > 0 ? t : -1;
+}
+
+vec3 plane::compute_normal(vec3 p){
+    return normalize(vec3(this->params.x, this->params.y, this->params.z));
 }
 
 float triangle::intersection(vec3 r0, vec3 ray){
@@ -84,6 +92,10 @@ float triangle::intersection(vec3 r0, vec3 ray){
     float t = dot(edge2, qvec) * inv_det;
 
     return t > 0 ? t : -1;
+}
+
+vec3 triangle::compute_normal(vec3 p){
+    return normalize(cross(this->v1 - this->v2, this->v1 - this->v3));
 }
 
 vec3 lgt::get_light_dir(vec3 p){
@@ -184,28 +196,12 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
                    vector<obj *> &objects, image &img, int depth) {
     vec3 p = r0 + n_t * normalize(ray);
 
-    // check if the camera is inside the sphere, camera location is r0
-    // float is_inside = 1.0f; // not inside
-
     vector<vec3> colors;
-    vec3 n;
+    vec3 n = object->compute_normal(p);
 
-    if (auto *s = dynamic_cast<sphere *>(object)) {
-        // check inside
-        // if (len(r0 - s->location) < s->radius)
-            // is_inside = -1.0f;
+    if (dot(n, ray) > 0)
+        n = -1.0f * n;
 
-        n = normalize(p - s->location);
-    }
-    else if (auto *s = dynamic_cast<plane *>(object)) {
-        n = normalize(vec3(s->params.x, s->params.y, s->params.z));
-    }
-    else if (auto *s = dynamic_cast<triangle *>(object)) {
-        n = normalize(cross(s->v3 - s->v1, s->v2 - s->v1));
-        if (dot(n, ray) > 0)
-            n = -1.0f * n;
-    }
-    else return {0, 0, 0, 1};
     // check if the point is in shadow
     for (auto light: lights) {
         if (!check_occlusion(p, object, objects, light)) {
@@ -219,17 +215,8 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
     }
 
     for (auto bulb: bulbs) {
-        bool in_shadow = false;
-        vec3 x = normalize(bulb->location - p);
-        for (auto *o: objects) {
-            if (o != object) {
-                if (o->intersection(p, x) != -1) {
-                    in_shadow = true;
-                    break;
-                }
-            }
-        }
-        if (!in_shadow) {
+        if (!check_occlusion(p, object, objects, bulb)) {
+            vec3 x = bulb->get_light_dir(p);
             vec3 cur_color = vec3((object->color.x * bulb->color.x),
                                   (object->color.y * bulb->color.y),
                                   (object->color.z * bulb->color.z));
