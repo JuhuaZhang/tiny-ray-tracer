@@ -99,10 +99,9 @@ vec3 triangle::compute_normal(vec3 p){
 }
 
 vec3 lgt::get_light_dir(vec3 p){
-    return this->direction;
+    return  normalize(this->direction);
 }
 
-// todo: find the bug
 vec3 lgt::compute_diffuse_color(vec3 p, vec3 n, vec4 color){
     vec3 light_dir = this->get_light_dir(p);
     vec3 diffuse_color = vec3(
@@ -156,26 +155,13 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
     // check if the point is in shadow
     for (auto light: lights) {
         if (!check_occlusion(p, object, objects, light)) {
-            vec3 x = normalize(light->direction); // incoming light direction
-            vec3 cur_color = vec3((object->color.x * light->color.x),
-                                  (object->color.y * light->color.y),
-                                  (object->color.z * light->color.z));
-            cur_color = max(dot(n, x), 0.0f) * cur_color;
-            colors.push_back(cur_color);
+            colors.push_back(light->compute_diffuse_color(p, n, object->color));
         }
     }
 
     for (auto bulb: bulbs) {
         if (!check_occlusion(p, object, objects, bulb)) {
-            vec3 x = bulb->get_light_dir(p);
-            vec3 cur_color = vec3((object->color.x * bulb->color.x),
-                                  (object->color.y * bulb->color.y),
-                                  (object->color.z * bulb->color.z));
-            cur_color = max(dot(n, x), 0.0f) * cur_color;
-            vec3 dis = bulb->location - p;
-            float d = sqrt(dis.x * dis.x + dis.y * dis.y + dis.z * dis.z);
-            cur_color = (1.0f / (d * d)) * cur_color;
-            colors.push_back(cur_color);
+            colors.push_back(bulb->compute_diffuse_color(p, n, object->color));
         }
     }
 
