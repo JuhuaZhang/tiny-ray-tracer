@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include "vec.h"
 #include "object.h"
 #include "utils.h"
@@ -48,8 +49,7 @@ int main(int argc, char *argv[]) {
 
             // for each obj
             for (obj *object: objects) {
-                // compute intersection
-                float temp = intersection(tracer.eye, ray, object);
+                float temp = object->intersection(tracer.eye, ray);
                 t.push_back(temp);
                 obj_map[temp] = object;
             }

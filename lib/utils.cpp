@@ -1,12 +1,14 @@
 #include "utils.h"
 
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include "lodepng.h"
 
+using namespace std;
+
 // read the file
 vector<vector<string>> read_file(const string &fileName) {
-
     ifstream input;
     input.open(fileName);
     vector<vector<string>> contents;

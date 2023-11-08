@@ -4,11 +4,6 @@
 #include <iostream>
 #include "vec.h"
 
-using namespace std;
-
-// read the content of the input file
-// vector<vector<string>> read_file(const string &fileName);
-
 // pixel to generate image
 class pixel {
 public:
@@ -17,12 +12,9 @@ public:
 
     pixel() : x(0), y(0), r(0), g(0), b(0), a(0) {}
 
-    pixel(int x, int y, float r, float g, float b, float a) : x(x), y(y), r(r),
-                                                              g(g), b(b),
-                                                              a(a) {}
+    pixel(int x, int y, float r, float g, float b, float a) : x(x), y(y), r(r), g(g), b(b), a(a) {}
 
-    pixel(int x, int y, vec4 color) : x(x), y(y), r(color.x), g(color.y),
-                                      b(color.z), a(color.w) {}
+    pixel(int x, int y, vec4 color) : x(x), y(y), r(color.x), g(color.y), b(color.z), a(color.w) {}
 };
 
 // contain image information and pixels
@@ -39,12 +31,12 @@ public:
     bool is_transparent = false;
     float transparency = 0.0f;
 
-    string image_name;
-    vector<pixel> pixels;
+    std::string image_name;
+    std::vector<pixel> pixels;
 
     image() : w(int(0.0f)), h(int(0.0f)), pixels() {}
 
-    image(float w, float h, string image_name) : w(int(w)), h(int(h)),
+    image(float w, float h, std::string image_name) : w(int(w)), h(int(h)),
                                                  image_name(
                                                          std::move(image_name)),
                                                  pixels() {}
@@ -65,7 +57,9 @@ public:
 
     obj(vec3 location, vec4 color) : location(location), color(color) {}
 
-    virtual ~obj() = default; // make it polymorphic
+    virtual float intersection(vec3 c, vec3 ray) = 0;
+
+    virtual ~obj() = default;
 };
 
 class sphere : public obj {
@@ -74,8 +68,9 @@ public:
 
     sphere() : obj(), radius(0.0f) {}
 
-    sphere(vec3 location, vec4 color, float radius) : obj(location, color),
-                                                      radius(radius) {}
+    sphere(vec3 location, vec4 color, float radius) : obj(location, color), radius(radius) {}
+
+    float intersection(vec3 c, vec3 ray) override;
 };
 
 class plane : public obj {
@@ -85,6 +80,8 @@ public:
     plane() : obj(), params(vec4()) {}
 
     plane(vec4 params, vec4 color) : obj(vec3(), color), params(params) {}
+
+    float intersection(vec3 c, vec3 ray) override;
 };
 
 class triangle : public obj {
@@ -93,8 +90,9 @@ public:
 
     triangle() : obj(), v1(vec3()), v2(vec3()), v3(vec3()) {}
 
-    triangle(vec3 v1, vec3 v2, vec3 v3, vec4 color) : obj(vec3(), color),
-                                                      v1(v1), v2(v2), v3(v3) {}
+    triangle(vec3 v1, vec3 v2, vec3 v3, vec4 color) : obj(vec3(), color), v1(v1), v2(v2), v3(v3) {}
+
+    float intersection(vec3 c, vec3 ray) override;
 };
 
 class lgt {
@@ -129,25 +127,14 @@ public:
                    right(vec3(1, 0, 0)), up(vec3(0, 1, 0)), n(1) {}
 };
 
-// // parse the content, covert to image, objects and so on
-// void
-// parse_content(vector<vector<string>> &contents, vector<obj *> &objects,
-//               vector<lgt *> &lights, vector<bulb *> &bulbs,
-//               image &img, vec4 &cur_color, ray_tracer &tracer,
-//               vector<vec3> &vertices);
 
 // release memory allocated by parse_content()
-void cleanup_objects(vector<obj *> &objects, vector<lgt *> &lights,
-                     vector<bulb *> &bulbs);
-
-// void generate_image(image &img);
-
-// calculate the intersection point of ray and object, return t
-float intersection(vec3 c, vec3 ray, obj *object);
+void cleanup_objects(std::vector<obj *> &objects, std::vector<lgt *> &lights,
+                     std::vector<bulb *> &bulbs);
 
 vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
-                   vector<lgt *> &lights, vector<bulb *> &bulbs,
-                   vector<obj *> &objects, image &img, int depth);
+                   std::vector<lgt *> &lights, std::vector<bulb *> &bulbs,
+                   std::vector<obj *> &objects, image &img, int depth);
 
 vec4 linear_to_srgb(vec4 color);
 
@@ -155,7 +142,7 @@ vec4 srgb_to_linear(vec4 color);
 
 vec4 color_mapping(vec4 color);
 
-vec3 trace_ray(vec3 r0, vec3 ray, obj *object, vector<lgt *> &lights,
-               vector<bulb *> &bulbs,
-               vector<obj *> &objects, image &img, int depth);
+vec3 trace_ray(vec3 r0, vec3 ray, obj *object, std::vector<lgt *> &lights,
+               std::vector<bulb *> &bulbs,
+               std::vector<obj *> &objects, image &img, int depth);
 #endif // OBJECT_H

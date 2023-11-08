@@ -1,15 +1,11 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <utility>
-#include <vector>
-#include <unordered_map>
 #include <algorithm>
 #include <limits>
 
 #include "object.h"
 
-// using namespace std;
+using namespace std;
 
 void cleanup_objects(vector<obj *> &objects, vector<lgt *> &lights,
                      vector<bulb *> &bulbs) {
@@ -28,93 +24,65 @@ void cleanup_objects(vector<obj *> &objects, vector<lgt *> &lights,
     }
 }
 
-
-float intersection(vec3 r0, vec3 ray, obj *object) {
-    // determine the object type
-    if (auto *s = dynamic_cast<sphere *>(object)) {
-        vec3 c = s->location;
-        vec3 rd = normalize(ray);
-        float r = s->radius;
-
-        // evaluate if the ray originates inside the sphere
-        bool inside = (len(c - r0) < r);
-        float tc = dot((c - r0), rd) / len(rd);
-
-        if ((!inside) && (tc < 0)) {
-            return -1; // no intersection
-        }
-
-        float d_square = len(r0 + tc * rd - c) * len(r0 + tc * rd - c);
-        if ((!inside) && (r * r < d_square)) {
-            return -1; // no intersection
-        }
-
-        float t_offset = sqrt(r * r - d_square) / len(rd);
-
-        if (inside) {
-            return tc + t_offset;
-        }
-        else {
-            return tc - t_offset;
-        }
-    }
-    else if (auto *s = dynamic_cast<plane *>(object)) {
-        vec3 n = normalize(vec3(s->params.x, s->params.y, s->params.z));
-
-        vec3 p;
-        // avoid division by zero
-        if (s->params.x != 0)
-            p = vec3(-1.0f * s->params.w / s->params.x, 0, 0);
-        else if (s->params.y != 0)
-            p = vec3(0, -1.0f * s->params.w / s->params.y, 0);
-        else if (s->params.z != 0)
-            p = vec3(0, 0, -1.0f * s->params.w / s->params.z);
+float sphere::intersection(vec3 r0, vec3 ray){
 
         vec3 rd = normalize(ray);
-        float t = dot((p - r0), n) / dot(rd, n);
+        bool inside = (len(this->location - r0) < this->radius);
+        float tc = dot((this->location - r0), rd) / len(rd);
 
-        if (t > 0)
-            return t;
-        else
-            return -1;
-    }
-    else if (auto *s = dynamic_cast<triangle *>(object)) {
-        // Möller-Trumbore algorithm
-        vec3 edge1 = s->v2 - s->v1;
-        vec3 edge2 = s->v3 - s->v1;
-        vec3 pvec = cross(normalize(ray), edge2);
-        float det = dot(edge1, pvec);
+        if ((!inside) && (tc < 0)) { return -1; } // no intersection
 
-        if (fabs(det) < 1e-8) {
-            return -1;
-        }
+        float d_square = len(r0 + tc * rd - this->location) * len(r0 + tc * rd - this->location);
+        float delta = this->radius * this->radius - d_square;
 
-        float inv_det = 1.0f / det;
-        vec3 tvec = r0 - s->v1;
-        float u = dot(tvec, pvec) * inv_det;
+        if ((!inside) && (delta < 0)) { return -1; } // no intersection
 
-        if (u < 0 || u > 1) {
-            return -1;
-        }
+        float t_offset = sqrt(delta) / len(rd);
 
-        vec3 qvec = cross(tvec, edge1);
-        float v = dot(normalize(ray), qvec) * inv_det;
+        return inside ? tc+t_offset : tc-t_offset;
+}
 
-        if (v < 0 || u + v > 1) {
-            return -1;
-        }
+float plane::intersection(vec3 r0, vec3 ray){
+    
+    vec3 n = normalize(vec3(this->params.x, this->params.y, this->params.z));
+    vec3 p;
+    // avoid division by zero
+    if (this->params.x != 0)
+        p = vec3(-1.0f * this->params.w / this->params.x, 0, 0);
+    else if (this->params.y != 0)
+        p = vec3(0, -1.0f * this->params.w / this->params.y, 0);
+    else if (this->params.z != 0)
+        p = vec3(0, 0, -1.0f * this->params.w / this->params.z);
 
-        float t = dot(edge2, qvec) * inv_det;
+    vec3 rd = normalize(ray);
+    float t = dot((p - r0), n) / dot(rd, n);
 
-        if (t > 0) {
-            return t;
-        }
-        else {
-            return -1;
-        }
-    }
+    return t > 0 ? t : -1;
+}
 
-    return -1;
+float triangle::intersection(vec3 r0, vec3 ray){
+    // Möller-Trumbore algorithm
+    vec3 edge1 = this->v2 - this->v1;
+    vec3 edge2 = this->v3 - this->v1;
+    vec3 pvec = cross(normalize(ray), edge2);
+    float det = dot(edge1, pvec);
+
+    if (fabs(det) < 1e-8) { return -1; }
+
+    float inv_det = 1.0f / det;
+    vec3 tvec = r0 - this->v1;
+    float u = dot(tvec, pvec) * inv_det;
+
+    if (u < 0 || u > 1) { return -1; }
+
+    vec3 qvec = cross(tvec, edge1);
+    float v = dot(normalize(ray), qvec) * inv_det;
+
+    if (v < 0 || u + v > 1) { return -1; }
+
+    float t = dot(edge2, qvec) * inv_det;
+
+    return t > 0 ? t : -1;
 }
 
 // used after computing the intersection
@@ -232,7 +200,7 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
         bool in_shadow = false;
         for (auto *o: objects) {
             if (o != object) {
-                if (intersection(p, light->direction, o) != -1) {
+                if (o->intersection(p, light->direction) != -1) {
                     in_shadow = true;
                     break;
                 }
@@ -253,7 +221,7 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
         vec3 x = is_inside * normalize(bulb->location - p);
         for (auto *o: objects) {
             if (o != object) {
-                if (intersection(p, x, o) != -1 && is_inside == -1.0f) {
+                if (o->intersection(p, x) != -1 && is_inside == -1.0f) {
                     in_shadow = true;
                     break;
                 }
@@ -291,32 +259,6 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj *object,
 
     vec4 final_color = {clamp(diffuse_color + specular_color), object->color.w};
 
-//    if (object->is_transparent) {
-//        float ior = 1.458f; // index of refraction
-//        float cosi = clamp(dot(ray, n));
-//        float etai = 1.0f, etat = ior;
-//        vec3 normal = n;
-//        if (cosi > 0) {
-//            std::swap(etai, etat);
-//            normal = -1.0f * n;
-//        }
-//        float eta = etai / etat;
-//        float k = 1 - eta * eta * (1 - cosi * cosi);
-//        vec3 refracted_dir = k < 0 ? vec3(0, 0, 0) :
-//                             eta * ray + (eta * cosi - sqrt(k)) * normal;
-//
-//        vec3 refracted_color = trace_ray(p, refracted_dir, object, lights,
-//                                         bulbs, objects, img, depth + 1);
-//
-//        // Fresnel effect using Schlick's approximation
-//        float R0 = (etat - etai) / (etat + etai);
-//        R0 *= R0;
-//        float c = 1 - (cosi < 0 ? -cosi : dot(refracted_dir, normal));
-//        float fresnel = R0 + (1 - R0) * pow(c, 5);
-//        vec3 tmp = fresnel * specular_color + (1 - fresnel) * refracted_color;
-//        final_color = vec4(tmp, object->transparency * object->color.w);
-//    }
-
     return final_color;
 }
 
@@ -333,7 +275,7 @@ vec3 trace_ray(vec3 r0, vec3 ray, obj *object, vector<lgt *> &lights,
 
     for (obj *obj: objects) {
         if (obj != object) {
-            float temp = intersection(r0, ray, obj);
+            float temp = obj->intersection(r0, ray);
             if (temp > 0.0f && temp < min_t) {
                 min_t = temp;
                 nearest_object = obj;
