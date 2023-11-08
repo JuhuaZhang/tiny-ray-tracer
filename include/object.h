@@ -103,6 +103,9 @@ public:
     lgt() : direction(vec3()), color(vec4()) {}
 
     lgt(vec3 location, vec4 color) : direction(location), color(color) {}
+
+    // todo
+    // virtual vec3 compute() = 0;
 };
 
 class bulb {
@@ -126,7 +129,6 @@ public:
     ray_tracer() : eye(vec3(0, 0, 0)), forward(vec3(0, 0, -1)),
                    right(vec3(1, 0, 0)), up(vec3(0, 1, 0)), n(1) {}
 };
-
 
 // release memory allocated by parse_content()
 void cleanup_objects(std::vector<obj *> &objects, std::vector<lgt *> &lights,

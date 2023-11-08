@@ -127,14 +127,6 @@ vec4 srgb_to_linear(vec4 color) {
 }
 
 vec4 color_mapping(vec4 color) {
-    // for each channel, if value < 0, convert to 0, if value > 1, convert to 1
-    //    color.x = (color.x < 0) ? 0 : color.x;
-    //    color.x = (color.x > 1) ? 1 : color.x;
-    //    color.y = (color.y < 0) ? 0 : color.y;
-    //    color.y = (color.y > 1) ? 1 : color.y;
-    //    color.z = (color.z < 0) ? 0 : color.z;
-    //    color.z = (color.z > 1) ? 1 : color.z;
-
     // convert (0-1) to (0-255)
     color.x = color.x * 255.0f; // + 0.5f;
     color.y = color.y * 255.0f; // + 0.5f;
