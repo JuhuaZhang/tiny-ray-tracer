@@ -61,10 +61,10 @@ vector<vector<string>> read_file(const string& fileName) {
     return contents;
 }
 
-void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, Image& img, ray_tracer& tracer,  vector<Light*>& lightings) {
+void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, Image& img, Raytracer& tracer,  vector<Light*>& lightings) {
 
-    vector<vec3> vertices; // store vertices to form a triangle
-    vec4 cur_color(1.0f, 1.0f, 1.0f, 1.0f); // default color
+    vector<Vec3> vertices; // store vertices to form a triangle
+    Vec4 cur_color(1.0f, 1.0f, 1.0f, 1.0f); // default color
 
     for ( auto& content : contents ) {
         if ( content.size() >= 4 && content[0] == "png" ) {
@@ -73,7 +73,7 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
             img.image_name = content[3];
         }
         else if ( content.size() >= 5 && content[0] == "sphere" ) {
-            auto* new_sphere = new Sphere(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color, stof(content[4]));
+            auto* new_sphere = new Sphere(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color, stof(content[4]));
 
             if ( img.is_shiny ) {
                 new_sphere->is_shiny = true;
@@ -87,15 +87,15 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
             objects.push_back(new_sphere);
         }
         else if ( content.size() >= 4 && content[0] == "sun" ) {
-            Sun* new_sun = new Sun(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
+            Sun* new_sun = new Sun(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
             lightings.emplace_back(new_sun);
         }
         else if ( content.size() >= 4 && content[0] == "color" ) {
-            vec4 temp_color = { stof(content[1]), stof(content[2]), stof(content[3]), 1.0f };
+            Vec4 temp_color = { stof(content[1]), stof(content[2]), stof(content[3]), 1.0f };
             cur_color = temp_color;
         }
         else if ( content.size() >= 4 && content[0] == "bulb" ) {
-            Bulb* new_bulb = new Bulb(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
+            Bulb* new_bulb = new Bulb(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
             lightings.emplace_back(new_bulb);
         }
         else if ( content.size() >= 2 && content[0] == "expose" ) {
@@ -103,33 +103,33 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
             img.expose = stof(content[1]);
         }
         else if ( content.size() >= 5 && content[0] == "plane" ) {
-            auto* new_plane = new Plane(vec4(stof(content[1]), stof(content[2]), stof(content[3]), stof(content[4])), cur_color);
+            auto* new_plane = new Plane(Vec4(stof(content[1]), stof(content[2]), stof(content[3]), stof(content[4])), cur_color);
             objects.push_back(new_plane);
         }
         else if ( content.size() >= 4 && content[0] == "eye" ) {
-            vec3 new_eye = { stof(content[1]), stof(content[2]),stof(content[3]) };
+            Vec3 new_eye = { stof(content[1]), stof(content[2]),stof(content[3]) };
             tracer.eye = new_eye;
         }
         else if ( content.size() >= 4 && content[0] == "forward" ) {
-            vec3 new_forward = { stof(content[1]), stof(content[2]),stof(content[3]) };
+            Vec3 new_forward = { stof(content[1]), stof(content[2]),stof(content[3]) };
             tracer.forward = new_forward;
             // Change up and right vectors to be perpendicular to the new forward.
-            vec3 original_up = tracer.up;
-            vec3 proj_up_on_forward = (dot(original_up, new_forward) / dot(new_forward, new_forward)) * new_forward;
-            vec3 new_up = original_up - proj_up_on_forward;
+            Vec3 original_up = tracer.up;
+            Vec3 proj_up_on_forward = (dot(original_up, new_forward) / dot(new_forward, new_forward)) * new_forward;
+            Vec3 new_up = original_up - proj_up_on_forward;
             tracer.up = normalize(new_up);
-            vec3 new_right = cross(new_up, new_forward);
+            Vec3 new_right = cross(new_up, new_forward);
             tracer.right = -1 * normalize(new_right);
         }
         else if ( content.size() >= 4 && content[0] == "up" ) {
-            vec3 input_up = { stof(content[1]), stof(content[2]), stof(content[3]) };
+            Vec3 input_up = { stof(content[1]), stof(content[2]), stof(content[3]) };
             // Use the closest possible up that is perpendicular to the existing forward. 
             // Then change the right vector to be perpendicular to forward and up.
-            vec3 existing_forward = tracer.forward;
-            vec3 proj_input_up_on_forward = (dot(input_up, existing_forward) / dot(existing_forward, existing_forward)) * existing_forward;
-            vec3 new_up = input_up - proj_input_up_on_forward;
+            Vec3 existing_forward = tracer.forward;
+            Vec3 proj_input_up_on_forward = (dot(input_up, existing_forward) / dot(existing_forward, existing_forward)) * existing_forward;
+            Vec3 new_up = input_up - proj_input_up_on_forward;
             tracer.up = normalize(new_up);
-            vec3 new_right = -1 * cross(new_up, existing_forward);
+            Vec3 new_right = -1 * cross(new_up, existing_forward);
             tracer.right = normalize(new_right);
         }
         else if ( content.size() >= 2 && content[0] == "shininess" ) {
@@ -137,7 +137,7 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
             img.shininess = stof(content[1]);
         }
         else if ( content.size() >= 4 && content[0] == "xyz" ) {
-            vec3 new_vertex(stof(content[1]), stof(content[2]), stof(content[3]));
+            Vec3 new_vertex(stof(content[1]), stof(content[2]), stof(content[3]));
             vertices.push_back(new_vertex);
         }
         else if ( content.size() >= 4 && content[0] == "trif" ) {
@@ -172,4 +172,92 @@ void generate_image(Image& img) {
     }
     lodepng_encode32_file(img.image_name.c_str(), im, img.w, img.h);
     free(im);
+}
+
+bool check_occlusion(Vec3 p, Object* self_object, vector<Object*>& objects, Light* lght) {
+    for (auto* object : objects) {
+        if (object != self_object) {
+            if (object->intersection(p, lght->get_light_dir(p)) != -1)
+                return true;
+        }
+    }
+    return false;
+}
+
+Vec4 compute_color(Vec3 r0, Vec3 ray, float n_t, Object* object, vector<Light*>& lights, vector<Object*>& objects, Image& img, int depth) {
+    Vec3 p = r0 + n_t * normalize(ray);
+    vector<Vec3> colors;
+
+    Vec3 n = object->compute_normal(p);
+    if (dot(n, ray) > 0) n = -1.0f * n;
+
+    // check if the point is in shadow
+    for (auto light : lights) {
+        if (!check_occlusion(p, object, objects, light)) {
+            colors.push_back(light->compute_diffuse_color(p, n, object->color));
+        }
+    }
+
+    // diffuse light
+    Vec3 diffuse_color = Vec3(0, 0, 0);
+    for (auto color : colors) {
+        diffuse_color = diffuse_color + color;
+        if (img.is_expose)
+            diffuse_color = expose(diffuse_color, img.expose);
+        diffuse_color = clamp(diffuse_color);
+    }
+    Vec3 specular_color = Vec3(0, 0, 0);
+    if (object->is_shiny) {
+        Vec3 reflect_dir = normalize(ray) - 2.0f * dot(n, normalize(ray)) * n;
+        reflect_dir = normalize(reflect_dir);
+        specular_color = object->shininess * trace_ray(p, reflect_dir, object, lights, objects, img, depth + 1);
+        specular_color = clamp(specular_color);
+    }
+    Vec4 final_color = { clamp(diffuse_color + specular_color), object->color.w };
+    return final_color;
+}
+
+Vec3 trace_ray(Vec3 r0, Vec3 ray, Object* object, vector<Light*>& lights,
+    vector<Object*>& objects, Image& img, int depth) {
+    if (depth > 4) {
+        return { 0, 0, 0 };
+    }
+
+    // Find the nearest intersection point and the corresponding object
+    float min_t = std::numeric_limits<float>::max();
+    Object* nearest_object = nullptr;
+
+    for (Object* obj : objects) {
+        if (obj != object) {
+            float temp = obj->intersection(r0, ray);
+            if (temp > 0.0f && temp < min_t) {
+                min_t = temp;
+                nearest_object = obj;
+            }
+        }
+    }
+
+    if (nearest_object != nullptr) {
+        return to_vec3(
+            compute_color(r0, ray, min_t, nearest_object, lights, objects, img, depth));
+    }
+    else {
+        return { 0, 0, 0 };
+    }
+}
+
+void cleanup_objects(vector<Object*>& objects, vector<Sun*>& lights, vector<Bulb*>& bulbs) {
+    for (Object* object : objects) {
+        delete object;
+    }
+    objects.clear();
+
+    for (Sun* light : lights) {
+        delete light;
+    }
+    lights.clear();
+
+    for (Bulb* bulb : bulbs) {
+        delete bulb;
+    }
 }

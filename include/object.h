@@ -16,7 +16,7 @@ public:
 
     Pixel(int x, int y, float r, float g, float b, float a) : x(x), y(y), r(r), g(g), b(b), a(a) {}
 
-    Pixel(int x, int y, vec4 color) : x(x), y(y), r(color.x), g(color.y), b(color.z), a(color.w) {}
+    Pixel(int x, int y, Vec4 color) : x(x), y(y), r(color.x), g(color.y), b(color.z), a(color.w) {}
 };
 
 // contain image information and pixels
@@ -45,21 +45,21 @@ public:
 class Object
 {
 public:
-    vec3 location;
-    vec4 color;
+    Vec3 location;
+    Vec4 color;
 
     bool is_shiny = false;
     float shininess = 1.0f;
     bool is_transparent = false;
     float transparency = 0.0f;
 
-    Object() : location(vec3()), color(vec4()) {}
+    Object() : location(Vec3()), color(Vec4()) {}
 
-    Object(vec3 location, vec4 color) : location(location), color(color) {}
+    Object(Vec3 location, Vec4 color) : location(location), color(color) {}
 
-    virtual float intersection(vec3 c, vec3 ray) = 0;
+    virtual float intersection(Vec3 c, Vec3 ray) = 0;
 
-    virtual vec3 compute_normal(vec3 p) = 0;
+    virtual Vec3 compute_normal(Vec3 p) = 0;
 
     virtual ~Object() = default;
 };
@@ -71,101 +71,50 @@ public:
 
     Sphere() : Object(), radius(0.0f) {}
 
-    Sphere(vec3 location, vec4 color, float radius) : Object(location, color), radius(radius) {}
+    Sphere(Vec3 location, Vec4 color, float radius) : Object(location, color), radius(radius) {}
 
-    float intersection(vec3 c, vec3 ray) override;
+    float intersection(Vec3 c, Vec3 ray) override;
 
-    vec3 compute_normal(vec3 p) override;
+    Vec3 compute_normal(Vec3 p) override;
 };
 
 class Plane : public Object
 {
 public:
-    vec4 params; // a, b, c, d
+    Vec4 params; // a, b, c, d
 
-    Plane() : Object(), params(vec4()) {}
+    Plane() : Object(), params(Vec4()) {}
 
-    Plane(vec4 params, vec4 color) : Object(vec3(), color), params(params) {}
+    Plane(Vec4 params, Vec4 color) : Object(Vec3(), color), params(params) {}
 
-    float intersection(vec3 c, vec3 ray) override;
+    float intersection(Vec3 c, Vec3 ray) override;
 
-    vec3 compute_normal(vec3 p) override;
+    Vec3 compute_normal(Vec3 p) override;
 };
 
 class Triangle : public Object
 {
 public:
-    vec3 v1, v2, v3;
+    Vec3 v1, v2, v3;
 
-    Triangle() : Object(), v1(vec3()), v2(vec3()), v3(vec3()) {}
+    Triangle() : Object(), v1(Vec3()), v2(Vec3()), v3(Vec3()) {}
 
-    Triangle(vec3 v1, vec3 v2, vec3 v3, vec4 color) : Object(vec3(), color), v1(v1), v2(v2), v3(v3) {}
+    Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Vec4 color) : Object(Vec3(), color), v1(v1), v2(v2), v3(v3) {}
 
-    float intersection(vec3 c, vec3 ray) override;
+    float intersection(Vec3 c, Vec3 ray) override;
 
-    vec3 compute_normal(vec3 p) override;
+    Vec3 compute_normal(Vec3 p) override;
 };
 
-class Light
+class Raytracer
 {
 public:
-    vec4 color;
-
-    Light() : color(vec4()) {}
-
-    Light(vec4 color) : color(color) {}
-
-    virtual vec3 get_light_dir(vec3 p) = 0;
-
-    virtual vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) = 0;
-
-    virtual ~Light() = default;
-};
-
-class Sun : public Light
-{
-public:
-    vec3 direction;
-
-    Sun() : Light(), direction(vec3()) {}
-
-    Sun(vec3 location, vec4 color) : Light(color), direction(location) {}
-
-    vec3 get_light_dir(vec3 p) override;
-
-    vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) override;
-};
-
-class Bulb : public Light
-{
-public:
-    vec3 location;
-
-    Bulb() : Light(), location(vec3()) {}
-
-    Bulb(vec3 location, vec4 color) : Light(color), location(location) {}
-
-    vec3 get_light_dir(vec3 p) override;
-
-    vec3 compute_diffuse_color(vec3 p, vec3 n, vec4 color) override;
-};
-
-class ray_tracer
-{
-public:
-    vec3 eye;
-    vec3 forward;
-    vec3 right;
-    vec3 up;
+    Vec3 eye;
+    Vec3 forward;
+    Vec3 right;
+    Vec3 up;
     int n; // for aa
 
-    ray_tracer() : eye(vec3(0, 0, 0)), forward(vec3(0, 0, -1)), right(vec3(1, 0, 0)), up(vec3(0, 1, 0)), n(1) {}
+    Raytracer() : eye(Vec3(0, 0, 0)), forward(Vec3(0, 0, -1)), right(Vec3(1, 0, 0)), up(Vec3(0, 1, 0)), n(1) {}
 };
-
-// release memory allocated by parse_content()
-void cleanup_objects(std::vector<Object*>& objects, std::vector<Sun*>& lights, std::vector<Bulb*>& bulbs);
-
-vec4 compute_color(vec3 r0, vec3 ray, float n_t, Object* object, std::vector<Light*>& lights, std::vector<Object*>& objects, Image& img, int depth);
-
-vec3 trace_ray(vec3 r0, vec3 ray, Object* object, std::vector<Light*>& lights, std::vector<Object*>& objects, Image& img, int depth);
 #endif // OBJECT_H

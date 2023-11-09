@@ -1,58 +1,58 @@
 #include "vec.h"
 #include <cmath>
 
-vec3 operator+(const vec3& v1, const vec3& v2) {
+Vec3 operator+(const Vec3& v1, const Vec3& v2) {
     return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
 }
 
-vec3 operator-(const vec3& v1, const vec3& v2) {
+Vec3 operator-(const Vec3& v1, const Vec3& v2) {
     return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
 }
 
-vec3 operator*(float c, const vec3& v1) {
+Vec3 operator*(float c, const Vec3& v1) {
     return { v1.x * c, v1.y * c, v1.z * c };
 }
 
-float dot(const vec3& v1, const vec3& v2) {
+float dot(const Vec3& v1, const Vec3& v2) {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-vec3 cross(const vec3& v1, const vec3& v2) {
+Vec3 cross(const Vec3& v1, const Vec3& v2) {
     return { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z,
             v1.x * v2.y - v1.y * v2.x };
 }
 
-vec3 normalize(const vec3& v) {
+Vec3 normalize(const Vec3& v) {
     float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     return { v.x / len, v.y / len, v.z / len };
 }
 
-float len(const vec3& v) {
+float len(const Vec3& v) {
     float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     return len;
 }
 
-vec4 operator+(const vec4& v1, const vec4& v2) {
+Vec4 operator+(const Vec4& v1, const Vec4& v2) {
     return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w };
 }
 
-vec4 operator-(const vec4& v1, const vec4& v2) {
+Vec4 operator-(const Vec4& v1, const Vec4& v2) {
     return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z, v1.w - v2.w };
 }
 
-float dot(const vec4& v1, const vec4& v2) {
+float dot(const Vec4& v1, const Vec4& v2) {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
 }
 
-vec4 normalize(const vec4& v) {
+Vec4 normalize(const Vec4& v) {
     float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
     return { v.x / len, v.y / len, v.z / len, v.w / len };
 }
 
-vec3 to_vec3(const vec4& v) { return { v.x, v.y, v.z }; }
+Vec3 to_vec3(const Vec4& v) { return { v.x, v.y, v.z }; }
 
-vec4 linear_to_srgb(vec4 color) {
-    vec4 srgb_color = color;
+Vec4 linear_to_srgb(Vec4 color) {
+    Vec4 srgb_color = color;
     srgb_color.x = (srgb_color.x <= 0.0031308f)
         ? (12.92f * srgb_color.x)
         : (1.055f * pow(srgb_color.x, 1.0f / 2.4f) - 0.055f);
@@ -65,7 +65,7 @@ vec4 linear_to_srgb(vec4 color) {
     return srgb_color;
 }
 
-vec4 srgb_to_linear(vec4 color) {
+Vec4 srgb_to_linear(Vec4 color) {
     // for each channel, if value < 0, convert to 0, if value > 1, convert to 1
     color.x = (color.x < 0) ? 0 : color.x;
     color.x = (color.x > 1) ? 1 : color.x;
@@ -90,7 +90,7 @@ vec4 srgb_to_linear(vec4 color) {
     return color;
 }
 
-vec4 color_mapping(vec4 color) {
+Vec4 color_mapping(Vec4 color) {
     // convert (0-1) to (0-255)
     color.x = color.x * 255.0f; // + 0.5f;
     color.y = color.y * 255.0f; // + 0.5f;
@@ -99,7 +99,7 @@ vec4 color_mapping(vec4 color) {
     return color;
 }
 
-vec3 clamp(vec3 color) {
+Vec3 clamp(Vec3 color) {
     color.x = (color.x < 0) ? 0 : color.x;
     color.x = (color.x > 1) ? 1 : color.x;
     color.y = (color.y < 0) ? 0 : color.y;
@@ -110,7 +110,7 @@ vec3 clamp(vec3 color) {
     return color;
 }
 
-vec3 expose(vec3 color, float exposure) {
+Vec3 expose(Vec3 color, float exposure) {
     color.x = 1 - exp(-color.x * exposure);
     color.y = 1 - exp(-color.y * exposure);
     color.z = 1 - exp(-color.z * exposure);
