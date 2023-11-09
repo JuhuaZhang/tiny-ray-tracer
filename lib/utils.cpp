@@ -61,7 +61,7 @@ vector<vector<string>> read_file(const string& fileName) {
     return contents;
 }
 
-void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, image& img, ray_tracer& tracer,  vector<light*>& lightings) {
+void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, Image& img, ray_tracer& tracer,  vector<Light*>& lightings) {
 
     vector<vec3> vertices; // store vertices to form a triangle
     vec4 cur_color(1.0f, 1.0f, 1.0f, 1.0f); // default color
@@ -73,7 +73,7 @@ void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, imag
             img.image_name = content[3];
         }
         else if ( content.size() >= 5 && content[0] == "sphere" ) {
-            auto* new_sphere = new sphere(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color, stof(content[4]));
+            auto* new_sphere = new Sphere(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color, stof(content[4]));
 
             if ( img.is_shiny ) {
                 new_sphere->is_shiny = true;
@@ -87,15 +87,15 @@ void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, imag
             objects.push_back(new_sphere);
         }
         else if ( content.size() >= 4 && content[0] == "sun" ) {
-            lgt* new_light = new lgt(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
-            lightings.emplace_back(new_light);
+            Sun* new_sun = new Sun(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
+            lightings.emplace_back(new_sun);
         }
         else if ( content.size() >= 4 && content[0] == "color" ) {
             vec4 temp_color = { stof(content[1]), stof(content[2]), stof(content[3]), 1.0f };
             cur_color = temp_color;
         }
         else if ( content.size() >= 4 && content[0] == "bulb" ) {
-            bulb* new_bulb = new bulb(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
+            Bulb* new_bulb = new Bulb(vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
             lightings.emplace_back(new_bulb);
         }
         else if ( content.size() >= 2 && content[0] == "expose" ) {
@@ -103,7 +103,7 @@ void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, imag
             img.expose = stof(content[1]);
         }
         else if ( content.size() >= 5 && content[0] == "plane" ) {
-            auto* new_plane = new plane(vec4(stof(content[1]), stof(content[2]), stof(content[3]), stof(content[4])), cur_color);
+            auto* new_plane = new Plane(vec4(stof(content[1]), stof(content[2]), stof(content[3]), stof(content[4])), cur_color);
             objects.push_back(new_plane);
         }
         else if ( content.size() >= 4 && content[0] == "eye" ) {
@@ -146,7 +146,7 @@ void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, imag
                 int tmp = stoi(content[i]);
                 idx.push_back(tmp > 0 ? tmp - 1 : int(vertices.size()) + tmp);
             }
-            auto* new_triangle = new triangle(vertices[idx[0]], vertices[idx[1]], vertices[idx[2]], cur_color);
+            auto* new_triangle = new Triangle(vertices[idx[0]], vertices[idx[1]], vertices[idx[2]], cur_color);
             objects.push_back(new_triangle);
         }
         else if ( content.size() >= 2 && content[0] == "transparency" ) {
@@ -156,7 +156,7 @@ void parse_content(vector<vector<string>>& contents, vector<obj*>& objects, imag
     }
 }
 
-void generate_image(image& img) {
+void generate_image(Image& img) {
     auto* im = ( unsigned char* )calloc(img.w * img.h * 4,
         sizeof(unsigned char));
 

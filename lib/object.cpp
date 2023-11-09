@@ -8,23 +8,23 @@
 
 using namespace std;
 
-void cleanup_objects(vector<obj*>& objects, vector<lgt*>& lights, vector<bulb*>& bulbs) {
-    for (obj* object : objects) {
+void cleanup_objects(vector<Object*>& objects, vector<Sun*>& lights, vector<Bulb*>& bulbs) {
+    for (Object* object : objects) {
         delete object;
     }
     objects.clear();
 
-    for (lgt* light : lights) {
+    for (Sun* light : lights) {
         delete light;
     }
     lights.clear();
 
-    for (bulb* bulb : bulbs) {
+    for (Bulb* bulb : bulbs) {
         delete bulb;
     }
 }
 
-float sphere::intersection(vec3 r0, vec3 ray) {
+float Sphere::intersection(vec3 r0, vec3 ray) {
 
     vec3 rd = normalize(ray);
     bool inside = (len(this->location - r0) < this->radius);
@@ -42,11 +42,11 @@ float sphere::intersection(vec3 r0, vec3 ray) {
     return inside ? tc + t_offset : tc - t_offset;
 }
 
-vec3 sphere::compute_normal(vec3 p) {
+vec3 Sphere::compute_normal(vec3 p) {
     return normalize(p - this->location);
 }
 
-float plane::intersection(vec3 r0, vec3 ray) {
+float Plane::intersection(vec3 r0, vec3 ray) {
 
     vec3 n = normalize(vec3(this->params.x, this->params.y, this->params.z));
     vec3 p;
@@ -64,11 +64,11 @@ float plane::intersection(vec3 r0, vec3 ray) {
     return t > 0 ? t : -1;
 }
 
-vec3 plane::compute_normal(vec3 p) {
+vec3 Plane::compute_normal(vec3 p) {
     return normalize(vec3(this->params.x, this->params.y, this->params.z));
 }
 
-float triangle::intersection(vec3 r0, vec3 ray) {
+float Triangle::intersection(vec3 r0, vec3 ray) {
     // Möller-Trumbore algorithm
     vec3 edge1 = this->v2 - this->v1;
     vec3 edge2 = this->v3 - this->v1;
@@ -93,15 +93,15 @@ float triangle::intersection(vec3 r0, vec3 ray) {
     return t > 0 ? t : -1;
 }
 
-vec3 triangle::compute_normal(vec3 p) {
+vec3 Triangle::compute_normal(vec3 p) {
     return normalize(cross(this->v1 - this->v2, this->v1 - this->v3));
 }
 
-vec3 lgt::get_light_dir(vec3 p) {
+vec3 Sun::get_light_dir(vec3 p) {
     return  normalize(this->direction);
 }
 
-vec3 lgt::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
+vec3 Sun::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
     vec3 light_dir = this->get_light_dir(p);
     vec3 diffuse_color = vec3(
         (color.x * this->color.x),
@@ -112,11 +112,11 @@ vec3 lgt::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
     return diffuse_color;
 }
 
-vec3 bulb::get_light_dir(vec3 p) {
+vec3 Bulb::get_light_dir(vec3 p) {
     return normalize(this->location - p);
 }
 
-vec3 bulb::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
+vec3 Bulb::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
     vec3 light_dir = this->get_light_dir(p);
     vec3 diffuse_color = vec3(
         (color.x * this->color.x),
@@ -130,7 +130,7 @@ vec3 bulb::compute_diffuse_color(vec3 p, vec3 n, vec4 color) {
     return diffuse_color;
 }
 
-bool check_occlusion(vec3 p, obj* self_object, vector<obj*>& objects, light* lght) {
+bool check_occlusion(vec3 p, Object* self_object, vector<Object*>& objects, Light* lght) {
     for (auto* object : objects) {
         if (object != self_object) {
             if (object->intersection(p, lght->get_light_dir(p)) != -1)
@@ -140,7 +140,7 @@ bool check_occlusion(vec3 p, obj* self_object, vector<obj*>& objects, light* lgh
     return false;
 }
 
-vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj* object, vector<light*>& lights, vector<obj*>& objects, image& img, int depth) {
+vec4 compute_color(vec3 r0, vec3 ray, float n_t, Object* object, vector<Light*>& lights, vector<Object*>& objects, Image& img, int depth) {
     vec3 p = r0 + n_t * normalize(ray);
     vector<vec3> colors;
 
@@ -173,17 +173,17 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj* object, vector<light*>& li
     return final_color;
 }
 
-vec3 trace_ray(vec3 r0, vec3 ray, obj* object, vector<light*>& lights,
-    vector<obj*>& objects, image& img, int depth) {
+vec3 trace_ray(vec3 r0, vec3 ray, Object* object, vector<Light*>& lights,
+    vector<Object*>& objects, Image& img, int depth) {
     if (depth > 4) {
         return { 0, 0, 0 };
     }
 
     // Find the nearest intersection point and the corresponding object
     float min_t = std::numeric_limits<float>::max();
-    obj* nearest_object = nullptr;
+    Object* nearest_object = nullptr;
 
-    for (obj* obj : objects) {
+    for (Object* obj : objects) {
         if (obj != object) {
             float temp = obj->intersection(r0, ray);
             if (temp > 0.0f && temp < min_t) {

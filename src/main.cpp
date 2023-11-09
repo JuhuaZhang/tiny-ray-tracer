@@ -16,27 +16,27 @@ int main(int argc, char* argv [ ]) {
 
     auto contents = read_file(argv[1]);
 
-    image img;
+    Image image;
     ray_tracer tracer;
 
-    vector<obj*> objects;
-    vector<light*> lightings;
+    vector<Object*> objects;
+    vector<Light*> lights;
 
-    parse_content(contents, objects, img, tracer, lightings);
-    int max_wh = max(img.w, img.h);
+    parse_content(contents, objects, image, tracer, lights);
+    int max_wh = max(image.w, image.h);
 
-    for (int x = 0; x < img.w; x++) {
-        for (int y = 0; y < img.h; y++) {
+    for (int x = 0; x < image.w; x++) {
+        for (int y = 0; y < image.h; y++) {
             // make ray
-            float sx = (2.0f * float(x) - float(img.w)) / float(max_wh);
-            float sy = (float(img.h) - 2.0f * float(y)) / float(max_wh);
+            float sx = (2.0f * float(x) - float(image.w)) / float(max_wh);
+            float sy = (float(image.h) - 2.0f * float(y)) / float(max_wh);
             vec3 ray = tracer.forward + sx * tracer.right + sy * tracer.up;
             float n_t = -1; // nearest t
             vector<float> t;
             // a map correspond to t and obj
-            unordered_map<float, obj*> obj_map;
+            unordered_map<float, Object*> obj_map;
 
-            for (obj* object : objects) {
+            for (Object* object : objects) {
                 float temp = object->intersection(tracer.eye, ray);
                 t.push_back(temp);
                 obj_map[temp] = object;
@@ -53,16 +53,16 @@ int main(int argc, char* argv [ ]) {
             if (n_t > 0) {
                 vec4 obj_color;
 
-                if (lightings.empty())
+                if (lights.empty())
                     obj_color = vec4(0, 0, 0, 1);
                 else
                     obj_color = linear_to_srgb(
-                        compute_color(tracer.eye, ray, n_t, obj_map[n_t], lightings, objects, img, 1));
-                pixel new_pix(x, y, obj_color);
-                img.pixels.push_back(new_pix);
+                        compute_color(tracer.eye, ray, n_t, obj_map[n_t], lights, objects, image, 1));
+                Pixel new_pix(x, y, obj_color);
+                image.pixels.push_back(new_pix);
             }
         }
     }
 
-    generate_image(img);
+    generate_image(image);
 }
