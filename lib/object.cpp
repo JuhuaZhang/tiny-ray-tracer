@@ -1,9 +1,4 @@
-#include <iostream>
-#include <utility>
-#include <algorithm>
-#include <limits>
 #include <cmath>
-
 #include "object.h"
 
 using namespace std;

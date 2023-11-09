@@ -19,13 +19,12 @@ int main(int argc, char* argv [ ]) {
 
     Image image;
     Raytracer raytracer;
-
     vector<Object*> objects;
     vector<Light*> lights;
 
-    parse_content(contents, objects, image, raytracer, lights);
-    int max_wh = max(image.w, image.h);
+    parse_content(contents, image, raytracer, objects, lights);
 
+    int max_wh = max(image.w, image.h);
     for (int x = 0; x < image.w; x++) {
         for (int y = 0; y < image.h; y++) {
             // make ray
@@ -64,6 +63,8 @@ int main(int argc, char* argv [ ]) {
             }
         }
     }
+
+    cleanup_objects(objects, lights);
 
     generate_image(image);
 }

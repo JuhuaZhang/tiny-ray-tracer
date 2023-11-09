@@ -61,34 +61,34 @@ vector<vector<string>> read_file(const string& fileName) {
     return contents;
 }
 
-void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, Image& img, Raytracer& tracer,  vector<Light*>& lightings) {
+void parse_content(vector<vector<string>>& contents, Image& image, Raytracer& tracer, vector<Object*>& objects, vector<Light*>& lights) {
 
     vector<Vec3> vertices; // store vertices to form a triangle
     Vec4 cur_color(1.0f, 1.0f, 1.0f, 1.0f); // default color
 
     for ( auto& content : contents ) {
         if ( content.size() >= 4 && content[0] == "png" ) {
-            img.w = stoi(content[1]);
-            img.h = stoi(content[2]);
-            img.image_name = content[3];
+            image.w = stoi(content[1]);
+            image.h = stoi(content[2]);
+            image.image_name = content[3];
         }
         else if ( content.size() >= 5 && content[0] == "sphere" ) {
             auto* new_sphere = new Sphere(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color, stof(content[4]));
 
-            if ( img.is_shiny ) {
+            if ( image.is_shiny ) {
                 new_sphere->is_shiny = true;
-                new_sphere->shininess = img.shininess;
+                new_sphere->shininess = image.shininess;
             }
-            if ( img.is_transparent ) {
+            if ( image.is_transparent ) {
                 new_sphere->is_transparent = true;
-                new_sphere->transparency = img.transparency;
+                new_sphere->transparency = image.transparency;
             }
 
-            objects.push_back(new_sphere);
+            objects.emplace_back(new_sphere);
         }
         else if ( content.size() >= 4 && content[0] == "sun" ) {
             Sun* new_sun = new Sun(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
-            lightings.emplace_back(new_sun);
+            lights.emplace_back(new_sun);
         }
         else if ( content.size() >= 4 && content[0] == "color" ) {
             Vec4 temp_color = { stof(content[1]), stof(content[2]), stof(content[3]), 1.0f };
@@ -96,15 +96,15 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
         }
         else if ( content.size() >= 4 && content[0] == "bulb" ) {
             Bulb* new_bulb = new Bulb(Vec3(stof(content[1]), stof(content[2]), stof(content[3])), cur_color);
-            lightings.emplace_back(new_bulb);
+            lights.emplace_back(new_bulb);
         }
         else if ( content.size() >= 2 && content[0] == "expose" ) {
-            img.is_expose = true;
-            img.expose = stof(content[1]);
+            image.is_expose = true;
+            image.expose = stof(content[1]);
         }
         else if ( content.size() >= 5 && content[0] == "plane" ) {
             auto* new_plane = new Plane(Vec4(stof(content[1]), stof(content[2]), stof(content[3]), stof(content[4])), cur_color);
-            objects.push_back(new_plane);
+            objects.emplace_back(new_plane);
         }
         else if ( content.size() >= 4 && content[0] == "eye" ) {
             Vec3 new_eye = { stof(content[1]), stof(content[2]),stof(content[3]) };
@@ -133,25 +133,25 @@ void parse_content(vector<vector<string>>& contents, vector<Object*>& objects, I
             tracer.right = normalize(new_right);
         }
         else if ( content.size() >= 2 && content[0] == "shininess" ) {
-            img.is_shiny = true;
-            img.shininess = stof(content[1]);
+            image.is_shiny = true;
+            image.shininess = stof(content[1]);
         }
         else if ( content.size() >= 4 && content[0] == "xyz" ) {
             Vec3 new_vertex(stof(content[1]), stof(content[2]), stof(content[3]));
-            vertices.push_back(new_vertex);
+            vertices.emplace_back(new_vertex);
         }
         else if ( content.size() >= 4 && content[0] == "trif" ) {
             vector<int> idx;
             for ( size_t i = 1; i < content.size(); i++ ) {
                 int tmp = stoi(content[i]);
-                idx.push_back(tmp > 0 ? tmp - 1 : int(vertices.size()) + tmp);
+                idx.emplace_back(tmp > 0 ? tmp - 1 : int(vertices.size()) + tmp);
             }
             auto* new_triangle = new Triangle(vertices[idx[0]], vertices[idx[1]], vertices[idx[2]], cur_color);
-            objects.push_back(new_triangle);
+            objects.emplace_back(new_triangle);
         }
         else if ( content.size() >= 2 && content[0] == "transparency" ) {
-            img.is_transparent = true;
-            img.transparency = stof(content[1]);
+            image.is_transparent = true;
+            image.transparency = stof(content[1]);
         }
     }
 }
@@ -206,6 +206,7 @@ Vec4 compute_color(Vec3 r0, Vec3 ray, float n_t, Object* object, vector<Light*>&
             diffuse_color = expose(diffuse_color, img.expose);
         diffuse_color = clamp(diffuse_color);
     }
+
     Vec3 specular_color = Vec3(0, 0, 0);
     if (object->is_shiny) {
         Vec3 reflect_dir = normalize(ray) - 2.0f * dot(n, normalize(ray)) * n;
@@ -246,18 +247,14 @@ Vec3 trace_ray(Vec3 r0, Vec3 ray, Object* object, vector<Light*>& lights,
     }
 }
 
-void cleanup_objects(vector<Object*>& objects, vector<Sun*>& lights, vector<Bulb*>& bulbs) {
+void cleanup_objects(vector<Object*>& objects, vector<Light*>& lights) {
     for (Object* object : objects) {
         delete object;
     }
     objects.clear();
 
-    for (Sun* light : lights) {
+    for (Light* light : lights) {
         delete light;
     }
     lights.clear();
-
-    for (Bulb* bulb : bulbs) {
-        delete bulb;
-    }
 }
