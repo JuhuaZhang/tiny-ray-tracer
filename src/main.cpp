@@ -16,19 +16,13 @@ int main(int argc, char* argv [ ]) {
 
     auto contents = read_file(argv[1]);
 
-    // image information
     image img;
-
-    // ray emission
     ray_tracer tracer;
 
     vector<obj*> objects;
     vector<light*> lightings;
 
-    // parse file
     parse_content(contents, objects, img, tracer, lightings);
-
-    // for each pixel
     int max_wh = max(img.w, img.h);
 
     for (int x = 0; x < img.w; x++) {
@@ -42,7 +36,6 @@ int main(int argc, char* argv [ ]) {
             // a map correspond to t and obj
             unordered_map<float, obj*> obj_map;
 
-            // for each obj
             for (obj* object : objects) {
                 float temp = object->intersection(tracer.eye, ray);
                 t.push_back(temp);
@@ -58,20 +51,18 @@ int main(int argc, char* argv [ ]) {
             }
 
             if (n_t > 0) {
-                // calculate light and the color
                 vec4 obj_color;
 
                 if (lightings.empty())
                     obj_color = vec4(0, 0, 0, 1);
                 else
                     obj_color = linear_to_srgb(
-                        compute_color_v2(tracer.eye, ray, n_t, obj_map[n_t], lightings, objects, img, 1));
+                        compute_color(tracer.eye, ray, n_t, obj_map[n_t], lightings, objects, img, 1));
                 pixel new_pix(x, y, obj_color);
                 img.pixels.push_back(new_pix);
             }
         }
     }
 
-    // cleanup_objects(objects, lights, bulbs);
     generate_image(img);
 }

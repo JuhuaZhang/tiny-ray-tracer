@@ -166,11 +166,7 @@ public:
 // release memory allocated by parse_content()
 void cleanup_objects(std::vector<obj*>& objects, std::vector<lgt*>& lights, std::vector<bulb*>& bulbs);
 
-vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj* object, std::vector<lgt*>& lights, std::vector<bulb*>& bulbs, std::vector<obj*>& objects, image& img, int depth);
+vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj* object, std::vector<light*>& lights, std::vector<obj*>& objects, image& img, int depth);
 
-vec3 trace_ray(vec3 r0, vec3 ray, obj* object, std::vector<lgt*>& lights, std::vector<bulb*>& bulbs, std::vector<obj*>& objects, image& img, int depth);
-
-vec4 compute_color_v2(vec3 r0, vec3 ray, float n_t, obj* object, std::vector<light*>& lights, std::vector<obj*>& objects, image& img, int depth);
-
-vec3 trace_ray_v2(vec3 r0, vec3 ray, obj* object, std::vector<light*>& lights, std::vector<obj*>& objects, image& img, int depth);
+vec3 trace_ray(vec3 r0, vec3 ray, obj* object, std::vector<light*>& lights, std::vector<obj*>& objects, image& img, int depth);
 #endif // OBJECT_H
