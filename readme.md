@@ -39,12 +39,17 @@ make
 ### Generate Image
 
 ```sh
-./program your-text.txt
+./tiny-ray-tracer test/redchair.txt
 ```
 
-The content of the `your-text.txt` should following the example file above.
+The content of the `text.txt` should following the example file above.
 
 ## Example Output
 
-![mpray_redchair](./mpray_redchair.png)
+![mpray_redchair](./redchair.png)
 
+## Reference
+
+This project follows the instructions of course [cs418](https://cs418.cs.illinois.edu/website/mps/raytracer.html) in uiuc.
+
+My ultimate goal is to reproduce the image shown at the bottom of the page.
