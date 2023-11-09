@@ -144,7 +144,6 @@ vec4 compute_color(vec3 r0, vec3 ray, float n_t, obj* object,
     vector<lgt*>& lights, vector<bulb*>& bulbs,
     vector<obj*>& objects, image& img, int depth) {
     vec3 p = r0 + n_t * normalize(ray);
-
     vector<vec3> colors;
     vec3 n = object->compute_normal(p);
 
@@ -212,6 +211,77 @@ vec3 trace_ray(vec3 r0, vec3 ray, obj* object, vector<lgt*>& lights,
         return to_vec3(
             compute_color(r0, ray, min_t, nearest_object, lights,
                 bulbs, objects, img, depth));
+    }
+    else {
+        return { 0, 0, 0 };
+    }
+}
+
+// 
+
+
+vec4 compute_color_v2(vec3 r0, vec3 ray, float n_t, obj* object,
+    vector<light*>& lights, 
+    vector<obj*>& objects, image& img, int depth) {
+    vec3 p = r0 + n_t * normalize(ray);
+    vector<vec3> colors;
+    vec3 n = object->compute_normal(p);
+
+    if ( dot(n, ray) > 0 )
+        n = -1.0f * n;
+
+    // check if the point is in shadow
+    for ( auto light : lights ) {
+        if ( !check_occlusion(p, object, objects, light) ) {
+            colors.push_back(light->compute_diffuse_color(p, n, object->color));
+        }
+    }
+
+    // diffuse light
+    vec3 diffuse_color = vec3(0, 0, 0);
+    for ( auto color : colors ) {
+        diffuse_color = diffuse_color + color;
+        if ( img.is_expose )
+            diffuse_color = expose(diffuse_color, img.expose);
+        diffuse_color = clamp(diffuse_color);
+    }
+    vec3 specular_color = vec3(0, 0, 0);
+    if ( object->is_shiny ) {
+        vec3 reflect_dir = normalize(ray) - 2.0f * dot(n, normalize(ray)) * n;
+        reflect_dir = normalize(reflect_dir);
+        specular_color = object->shininess *
+            trace_ray_v2(p, reflect_dir, object, lights, objects, img, depth + 1);
+        specular_color = clamp(specular_color);
+    }
+
+    vec4 final_color = { clamp(diffuse_color + specular_color), object->color.w };
+
+    return final_color;
+}
+
+vec3 trace_ray_v2(vec3 r0, vec3 ray, obj* object, vector<light*>& lights,
+    vector<obj*>& objects, image& img, int depth) {
+    if ( depth > 4 ) {
+        return { 0, 0, 0 };
+    }
+
+    // Find the nearest intersection point and the corresponding object
+    float min_t = std::numeric_limits<float>::max();
+    obj* nearest_object = nullptr;
+
+    for ( obj* obj : objects ) {
+        if ( obj != object ) {
+            float temp = obj->intersection(r0, ray);
+            if ( temp > 0.0f && temp < min_t ) {
+                min_t = temp;
+                nearest_object = obj;
+            }
+        }
+    }
+
+    if ( nearest_object != nullptr ) {
+        return to_vec3(
+            compute_color_v2(r0, ray, min_t, nearest_object, lights, objects, img, depth));
     }
     else {
         return { 0, 0, 0 };

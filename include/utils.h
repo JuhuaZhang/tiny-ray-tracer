@@ -13,9 +13,7 @@ std::vector<std::vector<std::string>> read_file(const std::string& fileName);
 // parse the content, covert to image, objects and so on
 void
 parse_content(std::vector<std::vector<std::string>>& contents, std::vector<obj*>& objects,
-    std::vector<lgt*>& lights, std::vector<bulb*>& bulbs,
-    image& img, vec4& cur_color, ray_tracer& tracer,
-    std::vector<vec3>& vertices);
+    image& img, ray_tracer& tracer, std::vector<light*> &lightings);
 
 void generate_image(image& img);
 
