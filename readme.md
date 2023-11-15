@@ -52,4 +52,4 @@ The content of the `text.txt` should following the example file above.
 
 This project follows the instructions of course [cs418](https://cs418.cs.illinois.edu/website/mps/raytracer.html) in uiuc.
 
-The ultimate goal is to reproduce the image shown at the bottom of the page.
+The ultimate goal is to reproduce the image shown at the bottom of the website.
